@@ -54,11 +54,27 @@ const create = ({ title, description = '', status = 'todo', priority = 'medium',
   return task;
 };
 
+/**
+ * The only fields a client may change through PUT /tasks/:id.
+ *
+ * Everything else on a task is server-owned: `id` and `createdAt` are assigned
+ * at creation, and `completedAt` is derived from `status`.
+ */
+const UPDATABLE_FIELDS = ['title', 'description', 'status', 'priority', 'dueDate'];
+
 const update = (id, fields) => {
   const index = tasks.findIndex((t) => t.id === id);
   if (index === -1) return null;
 
-  const updated = { ...tasks[index], ...fields };
+  // Copy across the whitelist instead of spreading the raw body. The previous
+  // `{ ...task, ...fields }` let a client rewrite id and createdAt and attach
+  // arbitrary keys to the stored record.
+  const changes = {};
+  UPDATABLE_FIELDS.forEach((key) => {
+    if (fields[key] !== undefined) changes[key] = fields[key];
+  });
+
+  const updated = { ...tasks[index], ...changes };
   tasks[index] = updated;
   return updated;
 };
