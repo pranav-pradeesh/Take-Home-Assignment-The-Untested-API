@@ -39,9 +39,39 @@ const validateUpdateTask = (body) => {
   return validateOptionalFields(body);
 };
 
+/**
+ * Body rules for PATCH /tasks/:id/assign.
+ *
+ * `assignee` is a free-text person reference, not a foreign key — there is no
+ * user store in this service to check it against. So the rules are the ones
+ * that can be enforced honestly here: it must be a string, it must contain
+ * something once trimmed, and it must be a plausible length.
+ *
+ * An empty string is rejected rather than treated as an unassign. Overloading
+ * '' to mean "clear this" makes an accidentally blank form field
+ * indistinguishable from a deliberate unassign; unassigning deserves its own
+ * explicit route.
+ */
+const MAX_ASSIGNEE_LENGTH = 100;
+
+const validateAssign = (body) => {
+  if (typeof body.assignee !== 'string') {
+    return 'assignee is required and must be a string';
+  }
+  if (body.assignee.trim() === '') {
+    return 'assignee must not be empty';
+  }
+  if (body.assignee.trim().length > MAX_ASSIGNEE_LENGTH) {
+    return `assignee must be at most ${MAX_ASSIGNEE_LENGTH} characters`;
+  }
+  return null;
+};
+
 module.exports = {
   VALID_STATUSES,
   VALID_PRIORITIES,
+  MAX_ASSIGNEE_LENGTH,
   validateCreateTask,
   validateUpdateTask,
+  validateAssign,
 };

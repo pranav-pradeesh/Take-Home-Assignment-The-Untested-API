@@ -431,6 +431,17 @@ describe('error handling', () => {
     expect(res.body.error).toEqual(expect.any(String));
   });
 
+  // body-parser attaches a 4xx to this. Passing it through beats reporting 500,
+  // which would tell the client to retry a request that can never succeed.
+  it('returns the parser status, not 500, when the body is too large', async () => {
+    const res = await request(app)
+      .post('/tasks')
+      .send({ title: 'a', description: 'x'.repeat(200 * 1024) });
+
+    expect(res.status).toBe(413);
+    expect(res.body.error).toEqual(expect.any(String));
+  });
+
   it('returns a JSON 404 for an unknown route', async () => {
     const res = await request(app).get('/not-a-route');
 

@@ -5,6 +5,7 @@ const {
   VALID_STATUSES,
   validateCreateTask,
   validateUpdateTask,
+  validateAssign,
 } = require('../utils/validators');
 
 router.get('/stats', (req, res) => {
@@ -102,6 +103,25 @@ router.delete('/:id', (req, res) => {
 
 router.patch('/:id/complete', (req, res) => {
   const task = taskService.completeTask(req.params.id);
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  res.json(task);
+});
+
+router.patch('/:id/assign', (req, res) => {
+  // Body first, then the lookup: a malformed request gets the same 400 whether
+  // or not the task happens to exist, so the client is told about one problem
+  // at a time and in the order it can act on them.
+  const error = validateAssign(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
+  // Trim at the boundary so the store only ever holds the canonical form —
+  // ' Pranav ' and 'Pranav' must not become two different assignees.
+  const task = taskService.assign(req.params.id, req.body.assignee.trim());
   if (!task) {
     return res.status(404).json({ error: 'Task not found' });
   }

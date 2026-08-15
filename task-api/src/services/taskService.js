@@ -48,6 +48,11 @@ const create = ({ title, description = '', status = 'todo', priority = 'medium',
     priority,
     dueDate,
     completedAt: null,
+    // Present from creation so every task has the same shape, whether or not it
+    // has ever been assigned. Clients can read task.assignee without guarding
+    // for the key being missing.
+    assignee: null,
+    assignedAt: null,
     createdAt: new Date().toISOString(),
   };
   tasks.push(task);
@@ -120,6 +125,32 @@ const completeTask = (id) => {
   return updated;
 };
 
+/**
+ * Set the assignee on a task. Returns the updated task, or null if there is no
+ * task with that id.
+ *
+ * Deliberately not folded into update(): assignment is its own operation with
+ * its own validation rules, and keeping it separate means `assignee` cannot be
+ * written through PUT and bypass them. `assignedAt` is stamped here rather than
+ * passed in, for the same reason completedAt is — it is server-owned.
+ *
+ * Reassigning is allowed and overwrites both fields. Handing work to someone
+ * else is normal; refusing it would need an unassign route just to recover.
+ */
+const assign = (id, assignee) => {
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+
+  const updated = {
+    ...tasks[index],
+    assignee,
+    assignedAt: new Date().toISOString(),
+  };
+
+  tasks[index] = updated;
+  return updated;
+};
+
 const _reset = () => {
   tasks = [];
 };
@@ -135,5 +166,6 @@ module.exports = {
   update,
   remove,
   completeTask,
+  assign,
   _reset,
 };
