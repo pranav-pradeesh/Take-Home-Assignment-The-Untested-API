@@ -8,6 +8,7 @@
 > | **Notes** | **[NOTES.md](./NOTES.md)** — design decisions, surprises, questions before shipping |
 > | **Tests** | [`task-api/tests/`](./task-api/tests) — 164 passing, 97.9% statements / 97.2% branches |
 > | **New endpoint** | `PATCH /tasks/:id/assign` — [`src/routes/tasks.js`](./task-api/src/routes/tasks.js) |
+> | **Live** | see [Live deployment](#live-deployment) below |
 >
 > ```bash
 > cd task-api && npm install && npm run coverage
@@ -130,6 +131,39 @@ curl "http://localhost:3000/tasks?status=pending&page=1&limit=10"
 ```bash
 curl -X PATCH http://localhost:3000/tasks/<id>/complete
 ```
+
+---
+
+## Live deployment
+
+Deployed on Vercel from `task-api/` as a serverless function —
+[`api/index.js`](./task-api/api/index.js) re-exports the Express app and
+[`vercel.json`](./task-api/vercel.json) rewrites every path to it. `npm start`
+is untouched and still runs a normal server locally.
+
+`GET /` returns the endpoint list, so the root URL is a usable starting point.
+
+```bash
+BASE=https://<deployment>.vercel.app
+
+curl $BASE/
+curl -X POST $BASE/tasks -H 'Content-Type: application/json' \
+  -d '{"title":"Write tests","priority":"high"}'
+curl $BASE/tasks
+curl -X PATCH $BASE/tasks/<id>/assign -H 'Content-Type: application/json' \
+  -d '{"assignee":"Pranav"}'
+curl $BASE/tasks/stats
+```
+
+**One caveat, stated plainly:** the store is an array in process memory. On
+serverless that memory belongs to a single warm instance — requests made close
+together share state, a cold start begins from an empty store, and two
+concurrent instances do not see each other's data. So the live URL demonstrates
+the API surface, not durable storage. That is a property of putting an
+in-memory store behind serverless rather than a fault in the code, and it is the
+third blocking question in [NOTES.md](./NOTES.md). A persistent host (Render,
+Fly, a container) would hold state for as long as the process lives; nothing
+short of a real datastore survives a restart.
 
 ---
 
