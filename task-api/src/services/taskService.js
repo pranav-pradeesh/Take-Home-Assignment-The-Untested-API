@@ -72,17 +72,24 @@ const remove = (id) => {
 };
 
 const completeTask = (id) => {
-  const task = findById(id);
-  if (!task) return null;
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) return null;
 
+  const task = tasks[index];
+
+  // Already finished: return it untouched. Re-stamping completedAt on a retried
+  // or duplicated request would overwrite the real completion time.
+  if (task.status === 'done' && task.completedAt) return task;
+
+  // Only status and completedAt change here. This used to also force
+  // priority back to 'medium', silently discarding user data on an
+  // endpoint that says nothing about priority.
   const updated = {
     ...task,
-    priority: 'medium',
     status: 'done',
     completedAt: new Date().toISOString(),
   };
 
-  const index = tasks.findIndex((t) => t.id === id);
   tasks[index] = updated;
   return updated;
 };
