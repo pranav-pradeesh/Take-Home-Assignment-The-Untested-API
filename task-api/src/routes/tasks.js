@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const taskService = require('../services/taskService');
-const { validateCreateTask, validateUpdateTask } = require('../utils/validators');
+const {
+  VALID_STATUSES,
+  validateCreateTask,
+  validateUpdateTask,
+} = require('../utils/validators');
 
 router.get('/stats', (req, res) => {
   const stats = taskService.getStats();
@@ -10,6 +14,14 @@ router.get('/stats', (req, res) => {
 
 router.get('/', (req, res) => {
   const { status, page, limit } = req.query;
+
+  // A status the API does not recognise is almost always a client typo. Returning
+  // an empty list would be indistinguishable from "no tasks match", so 400 instead.
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({
+      error: `status must be one of: ${VALID_STATUSES.join(', ')}`,
+    });
+  }
 
   if (status) {
     const tasks = taskService.getByStatus(status);

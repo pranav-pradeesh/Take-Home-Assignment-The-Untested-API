@@ -140,9 +140,12 @@ describe('GET /tasks?status=', () => {
 
   // Edge case: 'o' appears inside todo, in_progress and done. A substring match
   // would return all three, which is the difference between a filter and a no-op.
+  // It is not a valid status either, so the request is rejected outright.
   it('does not treat a substring as a wildcard', async () => {
     const res = await request(app).get('/tasks?status=o');
-    expect(res.body).not.toHaveLength(3);
+
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body)).toBe(false);
   });
 
   it('rejects a status outside the allowed set with 400', async () => {

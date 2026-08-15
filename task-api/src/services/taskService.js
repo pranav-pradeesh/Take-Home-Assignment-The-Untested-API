@@ -6,7 +6,9 @@ const getAll = () => [...tasks];
 
 const findById = (id) => tasks.find((t) => t.id === id);
 
-const getByStatus = (status) => tasks.filter((t) => t.status.includes(status));
+// Exact match. `includes` was doing a substring test, which turned any shared
+// letter into a wildcard (?status=o matched todo, in_progress and done).
+const getByStatus = (status) => tasks.filter((t) => t.status === status);
 
 const getPaginated = (page, limit) => {
   const offset = page * limit;
