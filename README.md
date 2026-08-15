@@ -1,5 +1,28 @@
 # Take-Home Assignment — The Untested API
 
+> ## Submission — Pranav Pradeesh
+>
+> | | |
+> |---|---|
+> | **Bug report** | **[BUGS.md](./BUGS.md)** — 16 findings, 11 fixed |
+> | **Notes** | **[NOTES.md](./NOTES.md)** — design decisions, surprises, questions before shipping |
+> | **Tests** | [`task-api/tests/`](./task-api/tests) — 163 passing, 97.8% statements / 97.2% branches |
+> | **New endpoint** | `PATCH /tasks/:id/assign` — [`src/routes/tasks.js`](./task-api/src/routes/tasks.js) |
+>
+> ```bash
+> cd task-api && npm install && npm run coverage
+> ```
+>
+> The commit history is the working log: tests were committed first and fail
+> 35/118 against the original code, then one commit per bug fix with the
+> reasoning in the message, then the new endpoint (tests before implementation).
+>
+> **Read [BUGS.md](./BUGS.md) and [NOTES.md](./NOTES.md) first** — the bug report
+> covers where each bug lives and why it happens, and the notes cover the design
+> decisions on the new endpoint.
+
+---
+
 A 2-day take-home assignment. You'll read unfamiliar code, write tests, track down bugs, and ship a small feature.
 
 Read **[ASSIGNMENT.md](./ASSIGNMENT.md)** for the full brief before you start.
@@ -68,6 +91,13 @@ ASSIGNMENT.md               # Full brief — read this first
 | `PATCH`  | `/tasks/:id/assign`       | **Assign a task to a user** _(to implement)_ |
 
 ### Task shape
+
+> **Note:** the `status` values below do not match the code or `ASSIGNMENT.md`,
+> which both use `todo | in_progress | done` — and the `?status=pending` sample
+> request further down cannot succeed. Left as-is because I do not know which
+> document is authoritative; written up as finding 16 in [BUGS.md](./BUGS.md).
+> The `assignee` and `assignedAt` fields added by the new endpoint are also
+> missing from this shape.
 
 ```json
 {
