@@ -12,6 +12,26 @@ router.get('/stats', (req, res) => {
   res.json(stats);
 });
 
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+
+/**
+ * Parse a positive-integer query param.
+ *
+ * `parseInt` is too forgiving here: parseInt('3cats') is 3 and parseInt('abc')
+ * is NaN, which the old `|| 1` fallback then turned into a silent default. A
+ * client that mistypes a page number should be told, not quietly served page 1.
+ *
+ * Returns NaN for anything that is not a whole number >= 1.
+ */
+const parsePositiveInt = (value, fallback) => {
+  if (value === undefined) return fallback;
+  if (!/^\d+$/.test(String(value))) return NaN;
+
+  const parsed = Number(value);
+  return parsed >= 1 ? parsed : NaN;
+};
+
 router.get('/', (req, res) => {
   const { status, page, limit } = req.query;
 
@@ -23,20 +43,28 @@ router.get('/', (req, res) => {
     });
   }
 
-  if (status) {
-    const tasks = taskService.getByStatus(status);
-    return res.json(tasks);
+  const isPaginated = page !== undefined || limit !== undefined;
+  const pageNum = parsePositiveInt(page, 1);
+  const limitNum = parsePositiveInt(limit, DEFAULT_LIMIT);
+
+  if (isPaginated) {
+    if (Number.isNaN(pageNum)) {
+      return res.status(400).json({ error: 'page must be a whole number >= 1' });
+    }
+    if (Number.isNaN(limitNum)) {
+      return res.status(400).json({ error: 'limit must be a whole number >= 1' });
+    }
+    // Without a ceiling a single request can drag the entire store over the wire.
+    if (limitNum > MAX_LIMIT) {
+      return res.status(400).json({ error: `limit must be <= ${MAX_LIMIT}` });
+    }
   }
 
-  if (page !== undefined || limit !== undefined) {
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 10;
-    const tasks = taskService.getPaginated(pageNum, limitNum);
-    return res.json(tasks);
-  }
+  // Filtering and pagination compose. Previously `status` short-circuited and
+  // silently ignored page/limit, so a filtered list could not be paged at all.
+  const tasks = status ? taskService.getByStatus(status) : taskService.getAll();
 
-  const tasks = taskService.getAll();
-  res.json(tasks);
+  return res.json(isPaginated ? taskService.paginate(tasks, pageNum, limitNum) : tasks);
 });
 
 router.post('/', (req, res) => {

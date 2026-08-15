@@ -10,10 +10,19 @@ const findById = (id) => tasks.find((t) => t.id === id);
 // letter into a wildcard (?status=o matched todo, in_progress and done).
 const getByStatus = (status) => tasks.filter((t) => t.status === status);
 
-const getPaginated = (page, limit) => {
-  const offset = page * limit;
-  return tasks.slice(offset, offset + limit);
+/**
+ * Slice a list into a page. `page` is 1-based, matching the documented
+ * `?page=1` query — the offset used to be `page * limit`, which made page 1
+ * skip the first `limit` records and left them unreachable.
+ *
+ * Exported so the route can paginate a list that has already been filtered.
+ */
+const paginate = (list, page, limit) => {
+  const offset = (page - 1) * limit;
+  return list.slice(offset, offset + limit);
 };
+
+const getPaginated = (page, limit) => paginate(tasks, page, limit);
 
 const getStats = () => {
   const now = new Date();
@@ -86,6 +95,7 @@ module.exports = {
   getAll,
   findById,
   getByStatus,
+  paginate,
   getPaginated,
   getStats,
   create,
