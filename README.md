@@ -8,7 +8,7 @@
 > | **Notes** | **[NOTES.md](./NOTES.md)** — design decisions, surprises, questions before shipping |
 > | **Tests** | [`task-api/tests/`](./task-api/tests) — 164 passing, 97.9% statements / 97.2% branches |
 > | **New endpoint** | `PATCH /tasks/:id/assign` — [`src/routes/tasks.js`](./task-api/src/routes/tasks.js) |
-> | **Live** | see [Live deployment](#live-deployment) below |
+> | **Live** | **https://take-home-assignment-the-untested-a-ten.vercel.app** — see [caveat](#live-deployment) |
 >
 > ```bash
 > cd task-api && npm install && npm run coverage
@@ -136,6 +136,8 @@ curl -X PATCH http://localhost:3000/tasks/<id>/complete
 
 ## Live deployment
 
+**https://take-home-assignment-the-untested-a-ten.vercel.app**
+
 Deployed on Vercel from `task-api/` as a serverless function —
 [`api/index.js`](./task-api/api/index.js) re-exports the Express app and
 [`vercel.json`](./task-api/vercel.json) rewrites every path to it. `npm start`
@@ -144,7 +146,7 @@ is untouched and still runs a normal server locally.
 `GET /` returns the endpoint list, so the root URL is a usable starting point.
 
 ```bash
-BASE=https://<deployment>.vercel.app
+BASE=https://take-home-assignment-the-untested-a-ten.vercel.app
 
 curl $BASE/
 curl -X POST $BASE/tasks -H 'Content-Type: application/json' \
@@ -154,6 +156,24 @@ curl -X PATCH $BASE/tasks/<id>/assign -H 'Content-Type: application/json' \
   -d '{"assignee":"Pranav"}'
 curl $BASE/tasks/stats
 ```
+
+Each fix is reproducible against the live URL:
+
+| Check | Request | Response |
+|---|---|---|
+| Bug 1 — substring status | `GET /tasks?status=o` | `400 status must be one of: todo, in_progress, done` |
+| Bug 2 — pagination | `GET /tasks?page=1&limit=10` | first page, not rows 11-20 |
+| Bug 3 — priority survives | `PATCH /tasks/:id/complete` on a `high` task | `"priority":"high"` |
+| Bug 4 — mass assignment | `PUT /tasks/:id` `{"id":"hijacked","role":"admin"}` | `id` and `createdAt` unchanged, `role` dropped |
+| Bug 5 — reopen | `PUT /tasks/:id` `{"status":"todo"}` on a done task | `"completedAt":null` |
+| Bug 6 — falsy fields | `POST /tasks` `{"title":"x","status":""}` | `400` |
+| Bug 7 — bad JSON | `POST /tasks` with a truncated body | `400`, and `GET /nope` returns JSON `404` |
+| Bug 8 — bad page | `GET /tasks?page=0` | `400 page must be a whole number >= 1` |
+| Bug 9 — limit ceiling | `GET /tasks?limit=100000` | `400 limit must be <= 100` |
+| Bug 10 — compose | `GET /tasks?status=todo&page=1&limit=1` | filtered *and* paged |
+| Bug 11 — idempotent | `PATCH /:id/complete` twice | same `completedAt` both times |
+| Feature | `PATCH /:id/assign` `{"assignee":"  Pranav  "}` | `"assignee":"Pranav"`, `assignedAt` stamped |
+| Feature | same, with `""` / `42` / 101 chars / unknown id | `400` / `400` / `400` / `404` |
 
 **One caveat, stated plainly:** the store is an array in process memory. On
 serverless that memory belongs to a single warm instance — requests made close
