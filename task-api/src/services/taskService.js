@@ -74,7 +74,17 @@ const update = (id, fields) => {
     if (fields[key] !== undefined) changes[key] = fields[key];
   });
 
-  const updated = { ...tasks[index], ...changes };
+  const current = tasks[index];
+
+  // completedAt is derived from status, so keep the two in step. Moving a task
+  // to done stamps it; moving it back out clears it. Without this, PUT could
+  // produce a done task with no completion time, or a reopened task still
+  // carrying the old one.
+  if (changes.status !== undefined && changes.status !== current.status) {
+    changes.completedAt = changes.status === 'done' ? new Date().toISOString() : null;
+  }
+
+  const updated = { ...current, ...changes };
   tasks[index] = updated;
   return updated;
 };
