@@ -4,7 +4,11 @@
  * Contract: return null when the body is acceptable, or a human-readable string
  * describing the first problem found.
  */
-const { validateCreateTask, validateUpdateTask } = require('../../src/utils/validators');
+const {
+  validateCreateTask,
+  validateUpdateTask,
+  validateAssign,
+} = require('../../src/utils/validators');
 
 describe('validateCreateTask', () => {
   it('accepts a body with only a title', () => {
@@ -107,5 +111,45 @@ describe('validateUpdateTask', () => {
 
   it('rejects an empty-string dueDate rather than treating it as absent', () => {
     expect(validateUpdateTask({ dueDate: '' })).toMatch(/dueDate/);
+  });
+});
+
+describe('validateAssign', () => {
+  it('accepts a plain name', () => {
+    expect(validateAssign({ assignee: 'Pranav' })).toBeNull();
+  });
+
+  it('accepts a name at the maximum length', () => {
+    expect(validateAssign({ assignee: 'a'.repeat(100) })).toBeNull();
+  });
+
+  it('accepts a name that is only at the limit once trimmed', () => {
+    expect(validateAssign({ assignee: `  ${'a'.repeat(100)}  ` })).toBeNull();
+  });
+
+  it('rejects a missing assignee', () => {
+    expect(validateAssign({})).toMatch(/assignee/);
+  });
+
+  it('rejects an empty assignee', () => {
+    expect(validateAssign({ assignee: '' })).toMatch(/assignee/);
+  });
+
+  it('rejects a whitespace-only assignee', () => {
+    expect(validateAssign({ assignee: '   ' })).toMatch(/assignee/);
+  });
+
+  it.each([
+    ['a number', 42],
+    ['null', null],
+    ['an array', []],
+    ['an object', {}],
+    ['a boolean', false],
+  ])('rejects an assignee that is %s', (_label, assignee) => {
+    expect(validateAssign({ assignee })).toMatch(/assignee/);
+  });
+
+  it('rejects a name over the maximum length', () => {
+    expect(validateAssign({ assignee: 'a'.repeat(101) })).toMatch(/100/);
   });
 });

@@ -26,6 +26,8 @@ describe('create', () => {
       priority: 'medium',
       dueDate: null,
       completedAt: null,
+      assignee: null,
+      assignedAt: null,
     });
     expect(task.id).toEqual(expect.any(String));
     expect(Date.parse(task.createdAt)).not.toBeNaN();
@@ -331,6 +333,56 @@ describe('completeTask', () => {
     const second = taskService.completeTask(task.id);
 
     expect(second.completedAt).toBe(first.completedAt);
+  });
+});
+
+describe('assign', () => {
+  it('stores the assignee and stamps assignedAt', () => {
+    const task = taskService.create({ title: 'a' });
+
+    const assigned = taskService.assign(task.id, 'Pranav');
+
+    expect(assigned.assignee).toBe('Pranav');
+    expect(Date.parse(assigned.assignedAt)).not.toBeNaN();
+  });
+
+  it('persists the assignment in the store', () => {
+    const task = taskService.create({ title: 'a' });
+    taskService.assign(task.id, 'Pranav');
+
+    expect(taskService.findById(task.id).assignee).toBe('Pranav');
+  });
+
+  it('returns null for an unknown id', () => {
+    expect(taskService.assign('nope', 'Pranav')).toBeNull();
+  });
+
+  it('leaves the rest of the task alone', () => {
+    const task = taskService.create({ title: 'a', priority: 'high' });
+
+    const assigned = taskService.assign(task.id, 'Pranav');
+
+    expect(assigned).toMatchObject({
+      id: task.id,
+      title: 'a',
+      priority: 'high',
+      createdAt: task.createdAt,
+    });
+  });
+
+  it('overwrites an existing assignee', () => {
+    const task = taskService.create({ title: 'a' });
+    taskService.assign(task.id, 'First');
+
+    expect(taskService.assign(task.id, 'Second').assignee).toBe('Second');
+  });
+
+  it('is not reachable through update()', () => {
+    const task = taskService.create({ title: 'a' });
+
+    const updated = taskService.update(task.id, { assignee: 'Sneaky' });
+
+    expect(updated.assignee).toBeNull();
   });
 });
 
