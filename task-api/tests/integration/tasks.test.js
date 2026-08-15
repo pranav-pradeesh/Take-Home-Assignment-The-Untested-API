@@ -419,6 +419,15 @@ describe('PATCH /tasks/:id/complete', () => {
   });
 });
 
+describe('GET /', () => {
+  it('describes the available endpoints', async () => {
+    const res = await request(app).get('/');
+
+    expect(res.status).toBe(200);
+    expect(res.body.endpoints).toHaveProperty('PATCH /tasks/:id/assign');
+  });
+});
+
 describe('error handling', () => {
   // A body the server cannot parse is the client's mistake, not a server fault.
   it('returns 400, not 500, for malformed JSON', async () => {

@@ -419,13 +419,13 @@ the contract. That is a pattern, not four separate accidents.
 
 ```
 Test Suites: 4 passed, 4 total
-Tests:       163 passed, 163 total
+Tests:       164 passed, 164 total
 
 -----------------|---------|----------|---------|---------|
 File             | % Stmts | % Branch | % Funcs | % Lines |
 -----------------|---------|----------|---------|---------|
-All files        |   97.84 |    97.24 |   97.14 |    97.6 |
- app.js          |   78.94 |    81.81 |   66.66 |   78.94 |
+All files        |   97.87 |    97.24 |   97.22 |   97.63 |
+ app.js          |   80.95 |    81.81 |      75 |   80.95 |
  routes/tasks.js |     100 |      100 |     100 |     100 |
  taskService.js  |     100 |    96.77 |     100 |     100 |
  validators.js   |     100 |      100 |     100 |     100 |

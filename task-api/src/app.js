@@ -4,6 +4,25 @@ const taskRoutes = require('./routes/tasks');
 const app = express();
 
 app.use(express.json());
+
+// Index, so the deployed root is self-describing rather than a 404. Handy when
+// the only thing someone has is the URL.
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Task API',
+    endpoints: {
+      'GET /tasks': 'List tasks. Optional ?status=todo|in_progress|done, ?page=, ?limit= (max 100)',
+      'GET /tasks/stats': 'Counts by status, plus overdue count',
+      'POST /tasks': 'Create a task. Body: { title, description?, status?, priority?, dueDate? }',
+      'PUT /tasks/:id': 'Update a task. Body: any of title, description, status, priority, dueDate',
+      'DELETE /tasks/:id': 'Delete a task (204)',
+      'PATCH /tasks/:id/complete': 'Mark a task done',
+      'PATCH /tasks/:id/assign': 'Assign a task. Body: { assignee: string }',
+    },
+    note: 'Data is held in memory and is not durable. On serverless it lives only for the lifetime of an instance.',
+  });
+});
+
 app.use('/tasks', taskRoutes);
 
 // Nothing above matched. Express's built-in fallback returns an HTML page, which

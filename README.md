@@ -6,7 +6,7 @@
 > |---|---|
 > | **Bug report** | **[BUGS.md](./BUGS.md)** — 16 findings, 11 fixed |
 > | **Notes** | **[NOTES.md](./NOTES.md)** — design decisions, surprises, questions before shipping |
-> | **Tests** | [`task-api/tests/`](./task-api/tests) — 163 passing, 97.8% statements / 97.2% branches |
+> | **Tests** | [`task-api/tests/`](./task-api/tests) — 164 passing, 97.9% statements / 97.2% branches |
 > | **New endpoint** | `PATCH /tasks/:id/assign` — [`src/routes/tasks.js`](./task-api/src/routes/tasks.js) |
 >
 > ```bash
