@@ -2,6 +2,8 @@
 
 > ## Submission — Pranav Pradeesh
 >
+> [![Tests](https://github.com/pranav-pradeesh/Take-Home-Assignment-The-Untested-API/actions/workflows/test.yml/badge.svg)](https://github.com/pranav-pradeesh/Take-Home-Assignment-The-Untested-API/actions/workflows/test.yml)
+>
 > | | |
 > |---|---|
 > | **Bug report** | **[BUGS.md](./BUGS.md)** — 16 findings, 11 fixed |
